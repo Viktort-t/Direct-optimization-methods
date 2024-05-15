@@ -258,7 +258,30 @@ def checking_search_interval() -> [bool, float, float, float]:
     return flag, start, end, epsilon
 
 
-def checking_the_number_of_variables(function: str) -> tuple[bool, str]:
+def removing_math_operations(input_str: str) -> str:
+    # Полный список всех математических операций для исключения
+    math_operations = [
+        'sin', 'cos', 'tan', 'cot',
+        'asin', 'acos', 'atan', 'acot',
+        'sinh', 'cosh', 'tanh', 'coth',
+        'asinh', 'acosh', 'atanh', 'acoth',
+        'ln', 'log', 'log10',
+        'exp', 'sqrt', 'factorial',
+        'binomial', 'gamma', 'beta',
+        'elliptic_f', 'elliptic_e', 'elliptic_k',
+        'elliptic_pi'
+    ]
+
+    # Создаём регулярное выражение для поиска математических операций
+    pattern = '|'.join(map(re.escape, math_operations))
+
+    # Используем регулярное выражение для удаления математических операций из строки
+    cleaned_str = re.sub(pattern, '', input_str)
+
+    return cleaned_str
+
+
+def checking_the_number_of_variables(_function: str) -> tuple[bool, str]:
     """
     Проверяет, содержит ли переданная строка только одну уникальную букву.
 
@@ -266,7 +289,7 @@ def checking_the_number_of_variables(function: str) -> tuple[bool, str]:
     уникальную букву. Это может быть полезно для проверки, что имя функции соответствует определенному формату или
     соглашению.
 
-    :param function: Введенная пользователем строка
+    :param _function: Введенная пользователем строка
     :returns:
         - bool: True, если строка содержит только одну уникальную букву, иначе False.
         - set[str]: Множество уникальных буквенных символов, найденных в строке.
@@ -278,9 +301,10 @@ def checking_the_number_of_variables(function: str) -> tuple[bool, str]:
         else:
             print("Строка содержит более одной уникальной буквы.")
     """
-    letters = re.findall(r'[a-z]', function)
+    _function = removing_math_operations(_function)
+    letters = re.findall(r'[a-z]', _function)
     unique_letters_count = len(set(letters))
-    return unique_letters_count == 1, set(letters)
+    return unique_letters_count <= 1, set(letters)
 
 
 def run():
@@ -338,7 +362,7 @@ def run():
         """
     parameters = initializing_function_parameters()
     methods = {
-        # "Перебора": brute_force_method,
+        "Перебора": brute_force_method,
         "Поразрядного поиска": bitwise_method,
         "Дихотомии": binary_search,
         "Золотого сечения": golden_section,
@@ -367,6 +391,7 @@ def run():
 
 if __name__ == '__main__':
     run()
+
 
     # 5*x**2 - 8*x**(5/4) - 20*x
     # 3
