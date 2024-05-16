@@ -11,8 +11,8 @@ from sympy import SympifyError, Pow, Symbol
 
 
 def measure_function_execution(
-        method_function: Callable[[Pow, float, float, float, Symbol], tuple[float, float]],
-        *args: [Pow, float, float, float, Symbol]) -> tuple[float, float, tuple[float, float]]:
+        method_function: Callable[[Pow, float, float, float, Symbol], tuple[float, float, int]],
+        *args: [Pow, float, float, float, Symbol]) -> tuple[float, float, tuple[float, float, int]]:
     """
     Функция, которая производит запуск передаваемой ей функции и
     замеряет время ее выполнения, а так же расходуемую память.
@@ -49,7 +49,7 @@ def fibonacci_iterative(n: int) -> int:
         return b
 
 
-def fibonacci_method(function: Pow, start: float, end: float, epsilon: float, variable: float) -> tuple[float, float]:
+def fibonacci_method(function: Pow, start: float, end: float, epsilon: float, variable: float) -> tuple[float, float, int]:
     """
     Функция для нахождения минимума функции на заданном отрезке с использованием метода Фибоначчи.
 
@@ -74,10 +74,10 @@ def fibonacci_method(function: Pow, start: float, end: float, epsilon: float, va
             start = x1
             x1 = x2
             x2 = start + end - x1
-    return (start + end) / 2, function.subs(variable, (start + end) / 2)
+    return (start + end) / 2, function.subs(variable, (start + end) / 2), count_step
 
 
-def golden_section(function: Pow, start: float, end: float, epsilon: float, variable: float) -> tuple[float, float]:
+def golden_section(function: Pow, start: float, end: float, epsilon: float, variable: float) -> tuple[float, float, int]:
     """
     Функция для нахождения минимума функции на заданном отрезке с использованием метода золотого сечения.
 
@@ -90,7 +90,9 @@ def golden_section(function: Pow, start: float, end: float, epsilon: float, vari
     """
     x1 = start + ((3 - 5 ** 0.5) / 2) * (end - start)
     x2 = start + ((5 ** 0.5 - 1) / 2) * (end - start)
+    number_of_iterations = 0
     while abs(end - start) > epsilon:
+        number_of_iterations += 1
         value_x1 = function.subs(variable, x1).evalf(9)
         value_x2 = function.subs(variable, x2).evalf(9)
         if abs(value_x1 - value_x2) < 10 ** -8:
@@ -101,10 +103,10 @@ def golden_section(function: Pow, start: float, end: float, epsilon: float, vari
             start = x1
             x1 = x2
             x2 = start + end - x1
-    return (start + end) / 2, function.subs(variable, (start + end) / 2)
+    return (start + end) / 2, function.subs(variable, (start + end) / 2), number_of_iterations
 
 
-def binary_search(function: Pow, start: float, end: float, epsilon: float, variable: float) -> tuple[float, float]:
+def binary_search(function: Pow, start: float, end: float, epsilon: float, variable: float) -> tuple[float, float, int]:
     """
     Функция для нахождения минимума функции на заданном отрезке с использованием бинарного поиска.
 
@@ -116,7 +118,9 @@ def binary_search(function: Pow, start: float, end: float, epsilon: float, varia
     :return: Точка минимума и значение минимума.
     """
     delta = epsilon / 10
+    number_of_iterations = 0
     while (end - start) / 2 > epsilon:
+        number_of_iterations += 1
         mid_left = (start + end - delta) / 2
         mid_right = (start + end + delta) / 2
         mid_value_left = function.subs(variable, mid_left)
@@ -129,10 +133,10 @@ def binary_search(function: Pow, start: float, end: float, epsilon: float, varia
         else:
             start = mid_left
             end = mid_right
-    return (start + end) / 2, function.subs(variable, (start + end) / 2)
+    return (start + end) / 2, function.subs(variable, (start + end) / 2), number_of_iterations
 
 
-def bitwise_method(function: Pow, start: float, end: float, epsilon: float, variable: float) -> tuple[float, float]:
+def bitwise_method(function: Pow, start: float, end: float, epsilon: float, variable: float) -> tuple[float, float, int]:
     """
     Функция для нахождения минимума функции на заданном отрезке с использованием поразрядного поиска.
 
@@ -145,8 +149,10 @@ def bitwise_method(function: Pow, start: float, end: float, epsilon: float, vari
     """
     step = 0.5
     min_x = current_x = start
+    number_of_iterations = 1
     min_val = past_val = function.subs(variable, start)
     while step > epsilon:
+        number_of_iterations += 1
         for x in np.arange(start, end + step, step):
             current_val = function.subs(variable, x)
             current_x = x
@@ -160,10 +166,10 @@ def bitwise_method(function: Pow, start: float, end: float, epsilon: float, vari
         start = current_x
         end = min_x - step
         step /= -4
-    return min_x, min_val
+    return min_x, min_val, number_of_iterations
 
 
-def brute_force_method(function: Pow, start: float, end: float, epsilon: float, variable: float) -> tuple[float, float]:
+def brute_force_method(function: Pow, start: float, end: float, epsilon: float, variable: float) -> tuple[float, float, int]:
     """
         Функция для нахождения минимума функции на заданном отрезке с использованием метода перебора.
 
@@ -176,8 +182,9 @@ def brute_force_method(function: Pow, start: float, end: float, epsilon: float, 
         """
 
     min_x = start
+    number_of_iterations = math.ceil((end - start) / epsilon)
     min_val = past_val = function.subs(variable, start)
-    step = (end - start) / math.ceil((end - start) / epsilon)
+    step = (end - start) / number_of_iterations
     for val in np.arange(start + step, end + step, step):
         current_val = function.subs(variable, val)
         if current_val < min_val:
@@ -186,7 +193,7 @@ def brute_force_method(function: Pow, start: float, end: float, epsilon: float, 
         if current_val > past_val:
             break
         past_val = current_val
-    return min_x, min_val
+    return min_x, min_val, number_of_iterations
 
 
 def initializing_function_parameters() -> tuple[Pow, float, float, float, Symbol] | None:
@@ -368,7 +375,7 @@ def run():
         "Золотого сечения": golden_section,
         "Фибоначчи": fibonacci_method
     }
-    table = PrettyTable(["метод", "время, с", "RAM, Mb", "x", "f(x)"])
+    table = PrettyTable(["метод", "время, с", "RAM, Mb", "кол-во итераций", "x", "f(x)"])
 
     for method_name, method in methods.items():
         try:
@@ -378,6 +385,7 @@ def run():
                     method_name,
                     round(time_spent, 5),
                     round(ram_usage, 5),
+                    result[2],
                     round(result[0], 5),
                     round(result[1], 5)
                 ]
